@@ -25,8 +25,8 @@ fn split_once(in_string: &str) -> (&str, &str) {
 /// process_event on each.
 fn do_test(commands: String) -> errors::Result<()> {
     let mut burner_status = events::BurnerStatus {
-        start_time: Utc.ymd(1970, 1, 1).and_hms(0, 0, 0),
-        end_time: Utc.ymd(1970, 1, 1).and_hms(0, 0, 0),
+        start_time: Utc::now(),
+        end_time: Utc::now(),
         firing: false,
     };
     for command in commands.split("-") {
@@ -40,8 +40,7 @@ fn do_test(commands: String) -> errors::Result<()> {
             timestamp: l_timestamp.timestamp_nanos() as u64,
             pin_state: evt_pin_state,
         };
-        burner_status = events::process_event(burner_status, event_status);
-        println!("{:?}", burner_status.firing);
+        burner_status = events::process_event(burner_status, &event_status);
         let duration = delay.parse::<u64>().unwrap();
         thread::sleep(Duration::from_millis(duration));
     }
@@ -51,8 +50,8 @@ fn do_test(commands: String) -> errors::Result<()> {
 
 fn do_main(burner: Burner) -> errors::Result<()> {
     let mut burner_status = events::BurnerStatus {
-        start_time: Utc.ymd(1970, 1, 1).and_hms(0, 0, 0),
-        end_time: Utc.ymd(1970, 1, 1).and_hms(0, 0, 0),
+        start_time: Utc::now(),
+        end_time: Utc::now(),
         firing: false,
     };
     let mut chip = Chip::new(burner.chip)?;
@@ -71,7 +70,7 @@ fn do_main(burner: Burner) -> errors::Result<()> {
             timestamp: evt.timestamp(),
             pin_state: evt_pin_state,
         };
-        burner_status = events::process_event(burner_status, event_status);
+        burner_status = events::process_event(burner_status, &event_status);
         println!("{:?}", burner_status.firing);
     }
 
