@@ -2,7 +2,8 @@ use chrono::prelude::*;
 
 #[derive(Debug)]
 pub enum LineState {
-    Low, High
+    Low,
+    High,
 }
 
 pub struct BurnerStatus {
@@ -17,17 +18,11 @@ pub struct EventStatus {
 }
 
 pub fn process_event(burner_status: BurnerStatus, event_status: EventStatus) -> BurnerStatus {
-
     let event_time: DateTime<Utc> = Utc::now();
-    let mut firing_state = false;
-    match event_status.pin_state {
-        LineState::High => {
-            firing_state = true;
-        }
-        LineState::Low => {
-            firing_state = false;
-        }
-    }
+    let firing_state = match event_status.pin_state {
+        LineState::High => true,
+        LineState::Low => false,
+    };
     println!("{:?}", event_status.pin_state);
     let new_burner_status = BurnerStatus {
         start_time: event_time,
@@ -36,4 +31,3 @@ pub fn process_event(burner_status: BurnerStatus, event_status: EventStatus) -> 
     };
     return new_burner_status;
 }
-
