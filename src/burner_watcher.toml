@@ -1,0 +1,3 @@
+[DBs]
+dbaseprefix = "/data/DBases/"
+burnerlogfile = "burnerLog.db"

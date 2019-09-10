@@ -1,4 +1,5 @@
 use chrono::prelude::*;
+use toml::Value;
 
 #[derive(Debug)]
 pub enum LineState {
@@ -25,7 +26,7 @@ fn save_to_dbase(burner_status: &BurnerStatus) {
 /// process_event takes the current burner status, and a new event. If the event is HIGH (firing),
 /// save the state (start_time) return. If the event is LOW (off), check to see if the time since
 /// last HIGH was more than 5 seconds. If it is, call save_to_dbase.
-pub fn process_event(burner_status: BurnerStatus, event_status: &EventStatus) -> BurnerStatus {
+pub fn process_event(burner_status: BurnerStatus, event_status: &EventStatus, config: &Value) -> BurnerStatus {
     let event_time: DateTime<Utc> = Utc::now(); 
     let mut new_burner_status = BurnerStatus {
         start_time: Utc.ymd(1970, 1, 1).and_hms(0, 0, 0),
