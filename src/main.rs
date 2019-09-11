@@ -24,6 +24,7 @@ fn split_once(in_string: &str) -> (&str, &str) {
     (first, second)
 }
 
+/// get_config reads a toml file for dbase file info.
 fn get_config(filepath: &str) -> Value {
     let config_string = fs::read_to_string(filepath).expect("Unable to read config file");
     let config = config_string.parse::<Value>().unwrap();
@@ -58,6 +59,8 @@ fn do_test(commands: String, dbase_filename: &str) -> errors::Result<()> {
     Ok(())
 }
 
+/// do_main takes the burner monitor line, watches it for level changes, and 
+/// calls process_event as needed.
 fn do_main(burner: Burner, dbase_filename: &str) -> errors::Result<()> {
     let mut burner_status = events::BurnerStatus {
         start_time: Utc::now(),

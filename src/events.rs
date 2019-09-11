@@ -62,6 +62,8 @@ pub fn process_event(burner_status: BurnerStatus, event_status: &EventStatus, db
         LineState::High => true,
         LineState::Low => false,
     };
+    // firing_state will be true if we have started the burner. If it's not true,
+    // we need to check if the burn was for more than 5 seconds. If so, log it.
     if firing_state {
         new_burner_status.start_time = event_time;
         new_burner_status.end_time = event_time;
