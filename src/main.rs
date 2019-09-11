@@ -94,8 +94,11 @@ fn main() {
     let args: Vec<String> = env::args().collect();
     env_logger::init();
     let config = get_config("burner_watcher.toml");
-    let dbase_filename = format!("{}{}", config["DBs"]["dbasepath"].as_str().unwrap(),
-        config["DBs"]["burnerlogfile"].as_str().unwrap());
+    let dbase_filename = format!(
+        "{}{}",
+        config["DBs"]["dbasepath"].as_str().unwrap(),
+        config["DBs"]["burnerlogfile"].as_str().unwrap()
+    );
 
     match args.len() {
         1 => {
