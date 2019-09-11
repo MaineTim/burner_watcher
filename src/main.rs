@@ -2,8 +2,8 @@ extern crate gpio_cdev;
 
 mod events;
 
-use std::fs;
 use std::env;
+use std::fs;
 use std::thread;
 use std::time::Duration;
 
@@ -33,7 +33,7 @@ fn get_config(filepath: &str) -> Value {
 /// do_test takes a command string in the format "HIGH:1000-LOW:2000-HIGH:4000",
 /// action:duration-action:duration... It simulates those events and calls
 /// process_event on each.
-fn do_test(commands: String, config: Value) -> errors::Result<()> {
+fn do_test(commands: String, dbase_filename: &str) -> errors::Result<()> {
     let mut burner_status = events::BurnerStatus {
         start_time: Utc::now(),
         end_time: Utc::now(),
@@ -50,7 +50,7 @@ fn do_test(commands: String, config: Value) -> errors::Result<()> {
             timestamp: l_timestamp.timestamp_nanos() as u64,
             pin_state: evt_pin_state,
         };
-        burner_status = events::process_event(burner_status, &event_status, &config);
+        burner_status = events::process_event(burner_status, &event_status, &dbase_filename);
         let duration = delay.parse::<u64>().unwrap();
         thread::sleep(Duration::from_millis(duration));
     }
@@ -58,7 +58,7 @@ fn do_test(commands: String, config: Value) -> errors::Result<()> {
     Ok(())
 }
 
-fn do_main(burner: Burner, config: Value) -> errors::Result<()> {
+fn do_main(burner: Burner, dbase_filename: &str) -> errors::Result<()> {
     let mut burner_status = events::BurnerStatus {
         start_time: Utc::now(),
         end_time: Utc::now(),
@@ -66,11 +66,7 @@ fn do_main(burner: Burner, config: Value) -> errors::Result<()> {
     };
     let mut chip = Chip::new(burner.chip)?;
     let line = chip.get_line(burner.line)?;
-    for event in line.events(
-        LineRequestFlags::INPUT,
-        EventRequestFlags::BOTH_EDGES,
-        "gpioevents",
-    )? {
+    for event in line.events(LineRequestFlags::INPUT, EventRequestFlags::BOTH_EDGES, "gpioevents")? {
         let evt = event?;
         let evt_pin_state = match evt.event_type() {
             EventType::RisingEdge => events::LineState::High,
@@ -80,8 +76,7 @@ fn do_main(burner: Burner, config: Value) -> errors::Result<()> {
             timestamp: evt.timestamp(),
             pin_state: evt_pin_state,
         };
-        burner_status = events::process_event(burner_status, &event_status, &config);
-        println!("{:?}", burner_status.firing);
+        burner_status = events::process_event(burner_status, &event_status, &dbase_filename);
     }
 
     Ok(())
@@ -97,12 +92,14 @@ fn main() {
     // otherwise do_test() with the first argument.
 
     let args: Vec<String> = env::args().collect();
+    env_logger::init();
     let config = get_config("burner_watcher.toml");
-
+    let dbase_filename = format!("{}{}", config["DBs"]["dbasepath"].as_str().unwrap(),
+        config["DBs"]["burnerlogfile"].as_str().unwrap());
 
     match args.len() {
         1 => {
-            match do_main(burner, config) {
+            match do_main(burner, &dbase_filename) {
                 Ok(()) => {}
                 Err(e) => {
                     println!("Error: {:?}", e);
@@ -111,7 +108,7 @@ fn main() {
         }
         _ => {
             let commands = &args[1];
-            match do_test(commands.to_string(), config) {
+            match do_test(commands.to_string(), &dbase_filename) {
                 Ok(()) => {}
                 Err(e) => {
                     println!("Error: {:?}", e);
